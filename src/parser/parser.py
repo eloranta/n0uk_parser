@@ -16,9 +16,6 @@ country_re = pattern = re.compile(
     re.X | re.I
 )
 
-pattern_map = defaultdict(set)  # multimap: key -> {countries}
-exact_map = defaultdict(set)    # multimap: key -> {countries}
-
 def _emit_token(tok, country):
     """Route token to the right multimap."""
     if not tok:
@@ -29,6 +26,9 @@ def _emit_token(tok, country):
         pattern_map[tok].add(country)
 
 def parse_cty_dat(path):
+    pattern_map = defaultdict(set)  # multimap: key -> {countries}
+    exact_map = defaultdict(set)    # multimap: key -> {countries}
+
     current_country = None
 
     with open(path, 'r', encoding='utf-8') as f:
@@ -46,8 +46,11 @@ def parse_cty_dat(path):
                     # Drop trailing punctuation or stray commas
                     tok = tok.strip(' ,\t')
                     if tok:
-                        _emit_token(tok, current_country)
-                continue
+                        if tok.startswith('='):
+                            exact_map[tok[1:]].add(current_country)   # strip leading '='
+                        else:
+                            pattern_map[tok].add(current_country)
+                    continue
 
             # Anything else we ignore (malformed or unrelated lines)
 
