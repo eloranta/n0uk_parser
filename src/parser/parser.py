@@ -3,7 +3,7 @@ from collections import defaultdict
 
 # Case-insensitive match for "Country name: <name>"
 country_re = pattern = re.compile(
-    r"""^\s*
+    r"""^
     (?P<name>[^:]+?)\s*:                 # Country/Entity name
     \s*(?P<cq>\d+)\s*:                   # CQ zone
     \s*(?P<itu>\d+)\s*:                  # ITU zone
