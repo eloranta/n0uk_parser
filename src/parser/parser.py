@@ -47,4 +47,9 @@ def parse_cty_dat(path):
 
 
     return pattern_map, exact_map
-               
+
+def main():
+    print("main")
+    
+if __name__ == "__main__":
+    main()
