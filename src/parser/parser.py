@@ -1,5 +1,7 @@
 import re
 from collections import defaultdict
+from bs4 import BeautifulSoup
+import requests
 
 # Case-insensitive match for "Country name: <name>"
 country_re = pattern = re.compile(
@@ -49,7 +51,65 @@ def parse_cty_dat(path):
     return pattern_map, exact_map
 
 def main():
-    print("main")
+    pattern_map, exact_map = parse_cty_dat("cty.dat")
+
+    region_re = re.compile(r'^(\S+)\s(\S+)\s(\S+)')
+    entries = []
+    URL = "https://www.chris.org/cgi-bin/jt65emeA"
+
+    html = requests.get(URL, timeout=30).text
+    text = BeautifulSoup(html, "html.parser").get_text()
+    lines = [line.rstrip() for line in text.splitlines()]
     
+    # line parser:  "10Sep 19:34 <message> ====== {<meta>}"
+    line_rx = re.compile(r"""^\s*
+        (?P<daymon>\d{2}[A-Za-z]{3})\s+
+        (?P<time>\d{2}:\d{2})\s+
+        (?P<message>.*?)\s+
+        ======\s+\{(?P<meta>.*?)\}\s*$
+    """, re.X)
+
+    # meta helpers
+    callsign_rx = re.compile(r"^[A-Z0-9]+", re.I)
+    grid_rx = re.compile(r"\b([A-R]{2}\d{2})", re.I)  # e.g., JO33, RE68
+
+    for line in lines:
+        m = line_rx.match(line)
+        if not m:
+            continue
+        daymon, t, msg, meta = m.group("daymon", "time", "message", "meta")
+        daymon = daymon[:2] + " " + daymon[2:]
+
+        # parse meta ? callsign, name, grid (best-effort)
+        call = (callsign_rx.search(meta).group(0) if callsign_rx.search(meta) else None)
+        grid_match = grid_rx.search(meta)
+        grid = grid_match.group(1) if grid_match else None
+
+        # crude name extraction: remove callsign & trailing grid-like token
+        if call:
+            m = region_re.search(meta)
+            state = None
+            if m:
+                state = m.group(3)
+            # if state and state != "xx"and state not in worked_states:
+                # print(state)
+
+        entries.append({
+            "utc": daymon + " " + t,
+            "message": msg.strip(),
+            "sender": meta.strip(),
+            "call": call,
+            "grid": grid
+        })
+
+    # for line in entries:
+        # dxcc = find_dxcc(line["call"])
+        # if not dxcc:
+            # dxcc = "\033[31mNone\033[0m"
+        # if dxcc not in worked:
+            # print(line["utc"], line["message"], line["call"], line["grid"], dxcc)
+
+    print(f"parsed {len(entries)} lines")
+
 if __name__ == "__main__":
     main()
