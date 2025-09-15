@@ -53,7 +53,19 @@ def parse_cty_dat(path):
 def main():
     pattern_map, exact_map = parse_cty_dat("cty.dat")
 
+    # line parser:  "10Sep 19:34 <message> ====== {<meta>}"
+    line_rx = re.compile(r"""^\s*
+        (?P<daymon>\d{2}[A-Za-z]{3})\s+
+        (?P<time>\d{2}:\d{2})\s+
+        (?P<message>.*?)\s+
+        ======\s+\{(?P<meta>.*?)\}\s*$
+        """, re.X)
+
+    # meta helpers
+    callsign_rx = re.compile(r"^[A-Z0-9]+", re.I)
+    grid_rx = re.compile(r"\b([A-R]{2}\d{2})", re.I)  # e.g., JO33, RE68
     region_re = re.compile(r'^(\S+)\s(\S+)\s(\S+)')
+
     entries = []
     URL = "https://www.chris.org/cgi-bin/jt65emeA"
 
@@ -61,17 +73,7 @@ def main():
     text = BeautifulSoup(html, "html.parser").get_text()
     lines = [line.rstrip() for line in text.splitlines()]
     
-    # line parser:  "10Sep 19:34 <message> ====== {<meta>}"
-    line_rx = re.compile(r"""^\s*
-        (?P<daymon>\d{2}[A-Za-z]{3})\s+
-        (?P<time>\d{2}:\d{2})\s+
-        (?P<message>.*?)\s+
-        ======\s+\{(?P<meta>.*?)\}\s*$
-    """, re.X)
 
-    # meta helpers
-    callsign_rx = re.compile(r"^[A-Z0-9]+", re.I)
-    grid_rx = re.compile(r"\b([A-R]{2}\d{2})", re.I)  # e.g., JO33, RE68
 
     for line in lines:
         m = line_rx.match(line)
@@ -85,12 +87,15 @@ def main():
         grid_match = grid_rx.search(meta)
         grid = grid_match.group(1) if grid_match else None
 
-        # crude name extraction: remove callsign & trailing grid-like token
+        state = None
         if call:
             m = region_re.search(meta)
-            state = None
             if m:
                 state = m.group(3)
+        if state == "xx":
+            state = "";
+        print(call, grid, state)
+
             # if state and state != "xx"and state not in worked_states:
                 # print(state)
 
