@@ -50,6 +50,51 @@ def parse_cty_dat(path):
 
     return pattern_map, exact_map
 
+worked_states = [
+    "AL",
+    "AR",
+    "AZ",
+    "CA",
+    "CT",
+    "DE",
+    "FL",
+    "GA",
+    "HI",
+    "ID",
+    "IL",
+    "IN",
+    "KY",
+    "MA",
+    "MD",
+    "ME",
+    "MI",
+    "MN",
+    "MO",
+    "MS",
+    "NC",
+    "ND",
+    "NH",
+    "NJ",
+    "NM",
+    "NV",
+    "NY",
+    "OH",
+    "OR",
+    "PA",
+    "RI",
+    "SC",
+    "TN",
+    "TX",
+    "UT",
+    "VA",
+    "VT",
+    "WA",
+    "WI",
+    "WV",
+    "WY",
+    ]
+
+
 def main():
     pattern_map, exact_map = parse_cty_dat("cty.dat")
 
@@ -72,8 +117,6 @@ def main():
     html = requests.get(URL, timeout=30).text
     text = BeautifulSoup(html, "html.parser").get_text()
     lines = [line.rstrip() for line in text.splitlines()]
-    
-
 
     for line in lines:
         m = line_rx.match(line)
@@ -94,7 +137,8 @@ def main():
                 state = m.group(3)
         if state == "xx":
             state = "";
-        print(call, grid, state)
+        if state and state not in worked_states:
+            print(call, grid, state)
 
             # if state and state != "xx"and state not in worked_states:
                 # print(state)
