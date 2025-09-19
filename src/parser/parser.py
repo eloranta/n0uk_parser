@@ -2,6 +2,7 @@ import re
 from collections import defaultdict
 from bs4 import BeautifulSoup
 import requests
+import time
 
 # Case-insensitive match for "Country name: <name>"
 country_re = pattern = re.compile(
@@ -640,39 +641,45 @@ def main():
     grid_rx = re.compile(r"\b([A-R]{2}\d{2})", re.I)  # e.g., JO33, RE68
     region_re = re.compile(r'^(\S+)\s(\S+)\s(\S+)')
 
-    entries = []
-    URL = "https://www.chris.org/cgi-bin/jt65emeA"
+    while True:
+        entries = []
+        URL = "https://www.chris.org/cgi-bin/jt65emeA"
 
-    html = requests.get(URL, timeout=30).text
-    text = BeautifulSoup(html, "html.parser").get_text()
-    lines = [line.rstrip() for line in text.splitlines()]
+        html = requests.get(URL, timeout=30).text
+        text = BeautifulSoup(html, "html.parser").get_text()
+        lines = [line.rstrip() for line in text.splitlines()]
 
-    for line in lines:
-        m = line_rx.match(line)
-        if not m:
-            continue
-        daymon, t, msg, meta = m.group("daymon", "time", "message", "meta")
-        daymon = daymon[:2] + " " + daymon[2:]
+        for line in lines:
+            m = line_rx.match(line)
+            if not m:
+                continue
+            daymon, t, msg, meta = m.group("daymon", "time", "message", "meta")
+            daymon = daymon[:2] + " " + daymon[2:]
 
-        # parse meta ? callsign, name, grid (best-effort)
-        call = (callsign_rx.search(meta).group(0) if callsign_rx.search(meta) else None)
-        grid_match = grid_rx.search(meta)
-        grid = grid_match.group(1) if grid_match else None
+            # parse meta ? callsign, name, grid (best-effort)
+            call = (callsign_rx.search(meta).group(0) if callsign_rx.search(meta) else None)
+            grid_match = grid_rx.search(meta)
+            grid = grid_match.group(1) if grid_match else None
 
-        state = None
-        if call:
-            m = region_re.search(meta)
-            if m:
-                state = m.group(3)
-        if state == "xx":
-            state = "";
-        if state and state not in worked_states:
-            print(line, "\033[31m", state, "\033[0m")
+            state = None
+            if call:
+                m = region_re.search(meta)
+                if m:
+                    state = m.group(3)
+            if state == "xx":
+                state = "";
+            if state and state not in worked_states:
+                print(line, "\033[31m", state, "\033[0m")
 
-        if grid and grid not in worked_grids:
-            print(line, "\033[31m", grid, "\033[0m")
-            
-    print(f"parsed {len(entries)} lines")
+            if grid and grid not in worked_grids:
+                print(line, "\033[31m", grid, "\033[0m")
+                
+        print(f"parsed {len(entries)} lines")
+        
+        time.sleep(60)
+
+        
+    
 
 if __name__ == "__main__":
     main()
