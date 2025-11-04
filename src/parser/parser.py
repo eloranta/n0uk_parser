@@ -131,6 +131,7 @@ worked_grids = [
 "DN21",
 "DN27",
 "DN40",
+"DN41",
 "DN54",
 "DO33",
 "DO61",
@@ -349,6 +350,7 @@ worked_grids = [
 "JO00",
 "JO01",
 "JO02",
+"JO03",
 "JO10",
 "JO11",
 "JO20",
@@ -578,6 +580,7 @@ worked_grids = [
 "MP80",
 "MP82",
 "NN58",
+"NO13",
 "NO33",
 "NO34",
 "NO52",
@@ -667,10 +670,10 @@ def main():
         if state == "xx":
             state = "";
         if state and state not in worked_states:
-            print(line, "\033[31m", state, "\033[0m")
+            print(line, state)
 
         if grid and grid not in worked_grids:
-            print(line, "\033[31m", grid, "\033[0m")
+            print(line, grid)
             
     print(f"parsed {len(entries)} lines")
 
