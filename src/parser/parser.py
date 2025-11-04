@@ -116,6 +116,8 @@ def parse_meta_html(meta_html: str):
             # If nothing matches expected pattern, treat the whole tail as name
             name = tail_text
 
+    if state.lower() == "xx":
+        state = ""
     return {
         "email": email or "",
         "call": call,
